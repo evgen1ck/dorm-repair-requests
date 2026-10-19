@@ -1,0 +1,57 @@
+[project]
+name = "dormitory-backend"
+version = "0.1.0"
+description = "Backend for dormitory repair requests"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.16",
+    "asyncpg>=0.31",
+    "bcrypt>=4.1",
+    "fastapi>=0.118",
+    "pydantic-settings>=2.10",
+    "sqlalchemy[asyncio]>=2.0.43",
+    "typer>=0.12",
+    "uvicorn>=0.37",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.21",
+    "httpx>=0.28",
+    "import-linter>=2.15",
+    "pytest>=8.4",
+    "pytest-asyncio>=1.0",
+    "ruff>=0.13",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.importlinter]
+root_package = "backend"
+
+[[tool.importlinter.contracts]]
+name = "Layers"
+type = "layers"
+layers = [
+    "backend.cli",
+    "backend.application",
+    "backend.migrations",
+    "backend.domains",
+    "backend.infrastructure",
+    "backend.core",
+]
+
+[[tool.importlinter.contracts]]
+name = "Domain layers"
+type = "layers"
+layers = ["backend.domains.requests", "backend.domains.rooms", "backend.domains.fault_types"]

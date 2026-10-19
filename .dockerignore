@@ -1,0 +1,15 @@
+.git
+.venv
+.env
+.ruff_cache
+.pytest_cache
+.import_linter_cache
+.idea
+.vscode
+**/__pycache__
+**/*.pyc
+backend/tests
+frontend/node_modules
+frontend/dist
+frontend/.env
+*.md
