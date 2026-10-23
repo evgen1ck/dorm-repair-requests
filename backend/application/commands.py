@@ -6,7 +6,12 @@ from backend.infrastructure.db.models import Room, User, UserRole
 from backend.infrastructure.db.repositories.rooms import RoomRepository
 from backend.infrastructure.db.repositories.users import UserRepository
 
-DEMO_RESIDENT_LOGIN = "ivan"
+DEMO_USERS = [
+    ("ivan", "Иван Петров", UserRole.RESIDENT),
+    ("dispatcher", "Мария Смирнова", UserRole.DISPATCHER),
+    ("master", "Сергей Кузнецов", UserRole.MASTER),
+    ("admin", "Администратор", UserRole.ADMIN),
+]
 DEMO_ROOMS = [("1", "101", 1), ("1", "214", 2), ("1", "305а", 3), ("2", "112", 1)]
 
 
@@ -35,18 +40,20 @@ async def seed_demo_data(database: Database) -> None:
     async with database.session_factory() as session:
         users = UserRepository(session)
         rooms = RoomRepository(session)
-        if await users.get_by_login(DEMO_RESIDENT_LOGIN) is not None or await rooms.list_all():
+        new_users = [
+            User(login=login, password_hash=hash_password(login), full_name=full_name, role=role)
+            for login, full_name, role in DEMO_USERS
+            if await users.get_by_login(login) is None
+        ]
+        new_rooms = (
+            []
+            if await rooms.list_all()
+            else [Room(building=b, number=n, floor=f) for b, n, f in DEMO_ROOMS]
+        )
+        if not new_users and not new_rooms:
             typer.echo("Демо-данные уже есть.")
             return
-        users.add(
-            User(
-                login=DEMO_RESIDENT_LOGIN,
-                password_hash=hash_password(DEMO_RESIDENT_LOGIN),
-                full_name="Иван Петров",
-                role=UserRole.RESIDENT,
-            )
-        )
-        for building, number, floor in DEMO_ROOMS:
-            session.add(Room(building=building, number=number, floor=floor))
+        session.add_all(new_users + new_rooms)
         await session.commit()
-    typer.echo(f"Создан жилец '{DEMO_RESIDENT_LOGIN}' и {len(DEMO_ROOMS)} комнаты.")
+    logins = ", ".join(f"'{user.login}'" for user in new_users) or "нет"
+    typer.echo(f"Созданы пользователи: {logins} (пароль равен логину), комнат: {len(new_rooms)}.")

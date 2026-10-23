@@ -3,7 +3,12 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from backend.application.commands import DEMO_ROOMS, create_admin_user, seed_demo_data
+from backend.application.commands import (
+    DEMO_ROOMS,
+    DEMO_USERS,
+    create_admin_user,
+    seed_demo_data,
+)
 from backend.infrastructure.db.database import Database
 from backend.infrastructure.db.models import Base, Room, User, UserRole
 
@@ -37,13 +42,19 @@ async def test_create_admin_stores_hashed_password(database_url, capsys):
     assert "создан" in capsys.readouterr().out
 
 
-async def test_seed_creates_resident_first_and_rooms_once(database_url, capsys):
+async def test_seed_creates_demo_users_and_rooms_once(database_url, capsys):
     async with Database(database_url) as database:
         await seed_demo_data(database)
         await seed_demo_data(database)
 
-    (user,) = await list_users(database_url)
-    assert (user["id"], user["role"]) == (1, UserRole.RESIDENT)
+    users = await list_users(database_url)
+    assert [(user["login"], user["role"]) for user in users] == [
+        (login, role) for login, _, role in DEMO_USERS
+    ]
+    assert users[0]["id"] == 1
+    assert all(
+        bcrypt.checkpw(user["login"].encode(), user["password_hash"].encode()) for user in users
+    )
     engine = create_async_engine(database_url)
     try:
         async with engine.connect() as connection:
@@ -52,6 +63,19 @@ async def test_seed_creates_resident_first_and_rooms_once(database_url, capsys):
         await engine.dispose()
     assert len(rooms) == len(DEMO_ROOMS)
     assert "уже есть" in capsys.readouterr().out
+
+
+async def test_seed_fills_in_missing_demo_users(database_url, capsys):
+    async with Database(database_url) as database:
+        await create_admin_user(database, "admin", "secret", "Админ")
+        await seed_demo_data(database)
+
+    users = await list_users(database_url)
+    assert sorted(user["login"] for user in users) == sorted(login for login, _, _ in DEMO_USERS)
+    assert bcrypt.checkpw(
+        b"secret", next(u for u in users if u["login"] == "admin")["password_hash"].encode()
+    )
+    assert "Созданы пользователи: 'ivan', 'dispatcher', 'master' " in capsys.readouterr().out
 
 
 async def test_create_admin_skips_existing_login(database_url, capsys):

@@ -37,7 +37,7 @@ def db_revision(
     migrations.create_revision(message, autogenerate)
 
 
-@db_app.command("seed", help="Create demo resident and rooms in an empty database")
+@db_app.command("seed", help="Create missing demo users (one per role) and rooms")
 def db_seed() -> None:
     async def run() -> None:
         async with Database(Settings().database_url) as database:

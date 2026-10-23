@@ -1,7 +1,7 @@
 from backend.infrastructure.db.models import Room
 
 
-async def test_rooms_are_sorted_by_building_and_number(client, session_factory):
+async def test_rooms_are_sorted_by_building_and_number(client, session_factory, login, resident):
     async with session_factory() as session:
         session.add_all(
             [
@@ -11,6 +11,7 @@ async def test_rooms_are_sorted_by_building_and_number(client, session_factory):
             ]
         )
         await session.commit()
+    await login(resident)
 
     response = await client.get("/api/v1/rooms")
     assert response.status_code == 200
@@ -19,3 +20,7 @@ async def test_rooms_are_sorted_by_building_and_number(client, session_factory):
         ("1", "305"),
         ("2", "101"),
     ]
+
+
+async def test_rooms_require_login(client):
+    assert (await client.get("/api/v1/rooms")).status_code == 401

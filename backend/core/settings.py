@@ -1,3 +1,6 @@
+from datetime import timedelta
+from zoneinfo import ZoneInfo
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
@@ -10,6 +13,10 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: str
     postgres_db: str
+    secret_key: str
+    access_token_ttl: timedelta = timedelta(hours=12)
+    cookie_secure: bool = False
+    timezone: ZoneInfo = ZoneInfo("Europe/Moscow")
     host: str = "0.0.0.0"
     port: int = 8000
     log_level: str = "INFO"

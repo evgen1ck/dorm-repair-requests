@@ -25,7 +25,3 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(String(20))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=true())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    @property
-    def is_active_resident(self) -> bool:
-        return self.is_active and self.role == UserRole.RESIDENT

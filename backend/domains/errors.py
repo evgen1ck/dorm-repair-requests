@@ -10,3 +10,11 @@ class NotFoundError(DomainError):
 
 class ForbiddenError(DomainError):
     pass
+
+
+class UnauthorizedError(DomainError):
+    pass
+
+
+class ConflictError(DomainError):
+    pass

@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Identity, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from backend.infrastructure.db.models.assignments import Assignment
 from backend.infrastructure.db.models.base import Base, db_enum
 from backend.infrastructure.db.models.fault_types import FaultType
 from backend.infrastructure.db.models.rooms import Room
@@ -13,6 +14,9 @@ class RequestStatus(enum.StrEnum):
     NEW = "new"
     IN_PROGRESS = "in_progress"
     DONE = "done"
+
+
+REQUEST_STATUS_TYPE = db_enum(RequestStatus, "request_status")
 
 
 class RepairRequest(Base):
@@ -28,7 +32,7 @@ class RepairRequest(Base):
     )
     fault_description: Mapped[str] = mapped_column(Text)
     status: Mapped[RequestStatus] = mapped_column(
-        db_enum(RequestStatus, "request_status"), server_default=RequestStatus.NEW.value
+        REQUEST_STATUS_TYPE, server_default=RequestStatus.NEW.value
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -38,3 +42,8 @@ class RepairRequest(Base):
 
     room: Mapped[Room] = relationship(lazy="joined")
     fault_type: Mapped[FaultType] = relationship(lazy="joined")
+    active_assignment: Mapped[Assignment | None] = relationship(
+        primaryjoin="and_(Assignment.request_id == RepairRequest.id, Assignment.is_active)",
+        viewonly=True,
+        lazy="joined",
+    )
