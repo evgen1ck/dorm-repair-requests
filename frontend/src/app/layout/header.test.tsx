@@ -1,20 +1,23 @@
 import { screen } from "@testing-library/react";
-import { renderWithProviders } from "@/test/test-utils";
+import { renderWithProviders, residentUser } from "@/test/test-utils";
 import { Header } from "./header";
 
-test("renders brand link and the new request action", () => {
-  renderWithProviders(<Header />);
+test("renders brand link, role navigation and the user menu", () => {
+  renderWithProviders(<Header containerClassName="" />);
   expect(screen.getByRole("link", { name: "Заявки на ремонт" })).toHaveAttribute(
     "href",
     "/requests",
   );
-  expect(screen.getByRole("link", { name: "Новая заявка" })).toHaveAttribute(
-    "href",
-    "/requests/new",
+  expect(screen.getByRole("link", { name: "Мои заявки" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Иван Петров, меню пользователя" })).toHaveTextContent(
+    "Иван Петров",
   );
 });
 
-test("hides the new request action on the form page", () => {
-  renderWithProviders(<Header />, "/requests/new");
-  expect(screen.queryByRole("link", { name: "Новая заявка" })).not.toBeInTheDocument();
+test("labels the requests navigation by role", () => {
+  renderWithProviders(<Header containerClassName="" />, {
+    user: { ...residentUser, role: "dispatcher" },
+  });
+  expect(screen.getByRole("link", { name: "Заявки" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Мои заявки" })).not.toBeInTheDocument();
 });

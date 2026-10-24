@@ -4,10 +4,51 @@
  * Dormitory repair requests
  * OpenAPI spec version: 0.1.0
  */
+export interface AssignmentCreate {
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   */
+  master_id: number;
+  due_at: string;
+}
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export const UserRole = {
+  admin: "admin",
+  resident: "resident",
+  dispatcher: "dispatcher",
+  master: "master",
+} as const;
+
+export interface PersonResponse {
+  id: number;
+  full_name: string;
+  phone: string | null;
+  role: UserRole;
+}
+
+export interface AssignmentResponse {
+  id: number;
+  dispatcher: PersonResponse;
+  master: PersonResponse;
+  due_at: string;
+  created_at: string;
+}
+
 export interface FaultTypeResponse {
   id: number;
   code: string;
   name: string;
+}
+
+export interface FaultTypeReportRow {
+  fault_type: FaultTypeResponse;
+  total: number;
+  new: number;
+  in_progress: number;
+  done: number;
 }
 
 export type ValidationErrorCtx = { [key: string]: unknown };
@@ -24,9 +65,26 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
+export interface LoginRequest {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  login: string;
+  /** @minLength 1 */
+  password: string;
+}
+
 export interface RepairRequestCreate {
-  resident_id: number;
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   */
   room_id: number;
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   */
   fault_type_id: number;
   /**
    * @minLength 1
@@ -52,16 +110,78 @@ export const RequestStatus = {
 
 export interface RepairRequestResponse {
   id: number;
-  resident_id: number;
+  resident: PersonResponse;
   room: RoomResponse;
   fault_type: FaultTypeResponse;
   fault_description: string;
   status: RequestStatus;
+  active_assignment: AssignmentResponse | null;
   created_at: string;
   updated_at: string;
   closed_at: string | null;
 }
 
+export interface RequestStatusHistoryResponse {
+  id: number;
+  changed_by: PersonResponse;
+  old_status: RequestStatus | null;
+  new_status: RequestStatus;
+  changed_at: string;
+}
+
+export interface RequestStatusUpdate {
+  status: RequestStatus;
+}
+
+export interface UserCreate {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  login: string;
+  /** @minLength 8 */
+  password: string;
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  full_name: string;
+  phone?: string | null;
+  role: UserRole;
+}
+
+export interface UserResponse {
+  id: number;
+  full_name: string;
+  phone: string | null;
+  role: UserRole;
+  login: string;
+  is_active: boolean;
+}
+
+export interface UserUpdate {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  full_name?: string;
+  phone?: string | null;
+  role?: UserRole;
+  is_active?: boolean;
+  /** @minLength 8 */
+  password?: string;
+}
+
+export type ListUsersParams = {
+  role?: UserRole | null;
+  is_active?: boolean | null;
+};
+
 export type ListRequestsParams = {
-  resident_id: number;
+  status?: RequestStatus | null;
+};
+
+export type RequestsByFaultTypeParams = {
+  date_from: string;
+  date_to: string;
 };

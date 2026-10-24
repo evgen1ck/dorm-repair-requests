@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { Route, Routes } from "react-router";
+import { Route, Routes, useNavigate } from "react-router";
 import { jsonResponse, renderWithProviders } from "@/test/test-utils";
 import { NewRequestPage } from "./new-request-page";
 
@@ -10,11 +10,16 @@ const faultTypes = [{ id: 1, code: "plumbing", name: "Сантехника" }];
 const lookupsFetch = (url: string) =>
   url.includes("/rooms") ? jsonResponse(rooms)() : jsonResponse(faultTypes)();
 
+function RequestPageStub() {
+  const navigate = useNavigate();
+  return <button onClick={() => navigate(-1)}>Страница заявки</button>;
+}
+
 const renderPage = () =>
   renderWithProviders(
     <Routes>
       <Route path="/" element={<NewRequestPage />} />
-      <Route path="/requests/:requestId" element={<p>Страница заявки</p>} />
+      <Route path="/requests/:requestId" element={<RequestPageStub />} />
     </Routes>,
   );
 
@@ -48,7 +53,7 @@ test("shows error when lookups fail to load", async () => {
   expect(screen.getByRole("button", { name: "Создать заявку" })).toBeDisabled();
 });
 
-test("submits the request and navigates to it", async () => {
+test("submits the request and replaces the form with it in history", async () => {
   const fetchMock = vi.fn((url: string, init?: RequestInit) =>
     init?.method === "POST" ? jsonResponse({ id: 42 }, 201)() : lookupsFetch(url),
   );
@@ -63,10 +68,11 @@ test("submits the request and navigates to it", async () => {
   await user.type(screen.getByLabelText("Описание"), "  Течёт кран  ");
   await user.click(screen.getByRole("button", { name: "Создать заявку" }));
 
-  expect(await screen.findByText("Страница заявки")).toBeInTheDocument();
+  await user.click(await screen.findByRole("button", { name: "Страница заявки" }));
+  expect(screen.getByRole("button", { name: "Страница заявки" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Создать заявку" })).not.toBeInTheDocument();
   const [, init] = fetchMock.mock.calls.find(([, i]) => i?.method === "POST")!;
   expect(JSON.parse(init!.body as string)).toEqual({
-    resident_id: 1,
     room_id: 3,
     fault_type_id: 1,
     fault_description: "Течёт кран",

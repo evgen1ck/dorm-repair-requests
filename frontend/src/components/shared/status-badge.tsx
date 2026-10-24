@@ -5,6 +5,8 @@ const TONES = {
   success: "bg-success/15 text-success",
   warning: "bg-warning/15 text-warning",
   info: "bg-info/15 text-info",
+  neutral: "bg-muted text-muted-foreground",
+  destructive: "bg-destructive/10 text-destructive",
 } as const;
 
 export type StatusTone = keyof typeof TONES;

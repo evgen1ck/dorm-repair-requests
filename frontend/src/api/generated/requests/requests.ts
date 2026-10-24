@@ -21,10 +21,13 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AssignmentCreate,
   HTTPValidationError,
   ListRequestsParams,
   RepairRequestCreate,
   RepairRequestResponse,
+  RequestStatusHistoryResponse,
+  RequestStatusUpdate,
 } from "../dormitoryRepairRequests.schemas";
 
 import { customFetch } from "../../mutator";
@@ -150,7 +153,7 @@ export const useCreateRequest = <TError = ErrorType<HTTPValidationError>, TConte
 > => {
   return useMutation(getCreateRequestMutationOptions(options), queryClient);
 };
-export const getListRequestsUrl = (params: ListRequestsParams) => {
+export const getListRequestsUrl = (params?: ListRequestsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -170,7 +173,7 @@ export const getListRequestsUrl = (params: ListRequestsParams) => {
  * @summary List Requests
  */
 export const listRequests = async (
-  params: ListRequestsParams,
+  params?: ListRequestsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RepairRequestResponse[]> => {
   return customFetch<RepairRequestResponse[]>(getListRequestsUrl(params), {
@@ -187,7 +190,7 @@ export const getListRequestsQueryOptions = <
   TData = Awaited<ReturnType<typeof listRequests>>,
   TError = ErrorType<HTTPValidationError>,
 >(
-  params: ListRequestsParams,
+  params?: ListRequestsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -214,7 +217,7 @@ export function useListRequests<
   TData = Awaited<ReturnType<typeof listRequests>>,
   TError = ErrorType<HTTPValidationError>,
 >(
-  params: ListRequestsParams,
+  params: undefined | ListRequestsParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>> &
       Pick<
@@ -233,7 +236,7 @@ export function useListRequests<
   TData = Awaited<ReturnType<typeof listRequests>>,
   TError = ErrorType<HTTPValidationError>,
 >(
-  params: ListRequestsParams,
+  params?: ListRequestsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>> &
       Pick<
@@ -252,7 +255,7 @@ export function useListRequests<
   TData = Awaited<ReturnType<typeof listRequests>>,
   TError = ErrorType<HTTPValidationError>,
 >(
-  params: ListRequestsParams,
+  params?: ListRequestsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -267,7 +270,7 @@ export function useListRequests<
   TData = Awaited<ReturnType<typeof listRequests>>,
   TError = ErrorType<HTTPValidationError>,
 >(
-  params: ListRequestsParams,
+  params?: ListRequestsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -406,3 +409,346 @@ export function useGetRequest<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getGetRequestHistoryUrl = (requestId: number) => {
+  return `/api/v1/requests/${requestId}/history`;
+};
+
+/**
+ * @summary Get Request History
+ */
+export const getRequestHistory = async (
+  requestId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RequestStatusHistoryResponse[]> => {
+  return customFetch<RequestStatusHistoryResponse[]>(getGetRequestHistoryUrl(requestId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRequestHistoryQueryKey = (requestId: number) => {
+  return [`/api/v1/requests/${requestId}/history`] as const;
+};
+
+export const getGetRequestHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRequestHistory>>,
+  TError = ErrorType<HTTPValidationError>,
+>(
+  requestId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRequestHistoryQueryKey(requestId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRequestHistory>>> = ({ signal }) =>
+    getRequestHistory(requestId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: requestId !== null && requestId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRequestHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRequestHistory>>
+>;
+export type GetRequestHistoryQueryError = ErrorType<HTTPValidationError>;
+
+export function useGetRequestHistory<
+  TData = Awaited<ReturnType<typeof getRequestHistory>>,
+  TError = ErrorType<HTTPValidationError>,
+>(
+  requestId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequestHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getRequestHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRequestHistory<
+  TData = Awaited<ReturnType<typeof getRequestHistory>>,
+  TError = ErrorType<HTTPValidationError>,
+>(
+  requestId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequestHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getRequestHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRequestHistory<
+  TData = Awaited<ReturnType<typeof getRequestHistory>>,
+  TError = ErrorType<HTTPValidationError>,
+>(
+  requestId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Request History
+ */
+
+export function useGetRequestHistory<
+  TData = Awaited<ReturnType<typeof getRequestHistory>>,
+  TError = ErrorType<HTTPValidationError>,
+>(
+  requestId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequestHistory>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRequestHistoryQueryOptions(requestId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAssignRequestUrl = (requestId: number) => {
+  return `/api/v1/requests/${requestId}/assignments`;
+};
+
+/**
+ * @summary Assign Request
+ */
+export const assignRequest = async (
+  requestId: number,
+  assignmentCreate: AssignmentCreate,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RepairRequestResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<RepairRequestResponse>(getAssignRequestUrl(requestId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(assignmentCreate),
+  });
+};
+
+export const getAssignRequestMutationKey = () => ["assignRequest"] as const;
+
+export const getAssignRequestMutationOptions = <
+  TError = ErrorType<HTTPValidationError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignRequest>>,
+    TError,
+    AssignRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof assignRequest>>,
+  TError,
+  AssignRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAssignRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof assignRequest>>,
+    AssignRequestMutationVariables
+  > = (props) => {
+    const { requestId, data } = props ?? {};
+
+    return assignRequest(requestId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AssignRequestMutationResult = NonNullable<Awaited<ReturnType<typeof assignRequest>>>;
+export type AssignRequestMutationBody = BodyType<AssignmentCreate>;
+export type AssignRequestMutationError = ErrorType<HTTPValidationError>;
+export type AssignRequestMutationVariables = {
+  requestId: number;
+  data: BodyType<AssignmentCreate>;
+};
+
+/**
+ * @summary Assign Request
+ */
+export const useAssignRequest = <TError = ErrorType<HTTPValidationError>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof assignRequest>>,
+      TError,
+      AssignRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof assignRequest>>,
+  TError,
+  AssignRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getAssignRequestMutationOptions(options), queryClient);
+};
+export const getChangeRequestStatusUrl = (requestId: number) => {
+  return `/api/v1/requests/${requestId}/status`;
+};
+
+/**
+ * @summary Change Request Status
+ */
+export const changeRequestStatus = async (
+  requestId: number,
+  requestStatusUpdate: RequestStatusUpdate,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<RepairRequestResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<RepairRequestResponse>(getChangeRequestStatusUrl(requestId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestStatusUpdate),
+  });
+};
+
+export const getChangeRequestStatusMutationKey = () => ["changeRequestStatus"] as const;
+
+export const getChangeRequestStatusMutationOptions = <
+  TError = ErrorType<HTTPValidationError>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeRequestStatus>>,
+    TError,
+    ChangeRequestStatusMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeRequestStatus>>,
+  TError,
+  ChangeRequestStatusMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeRequestStatusMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeRequestStatus>>,
+    ChangeRequestStatusMutationVariables
+  > = (props) => {
+    const { requestId, data } = props ?? {};
+
+    return changeRequestStatus(requestId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeRequestStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeRequestStatus>>
+>;
+export type ChangeRequestStatusMutationBody = BodyType<RequestStatusUpdate>;
+export type ChangeRequestStatusMutationError = ErrorType<HTTPValidationError>;
+export type ChangeRequestStatusMutationVariables = {
+  requestId: number;
+  data: BodyType<RequestStatusUpdate>;
+};
+
+/**
+ * @summary Change Request Status
+ */
+export const useChangeRequestStatus = <TError = ErrorType<HTTPValidationError>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeRequestStatus>>,
+      TError,
+      ChangeRequestStatusMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeRequestStatus>>,
+  TError,
+  ChangeRequestStatusMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeRequestStatusMutationOptions(options), queryClient);
+};

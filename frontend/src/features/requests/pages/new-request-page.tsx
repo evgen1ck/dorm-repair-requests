@@ -1,14 +1,8 @@
 import { Link, useNavigate } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import {
-  getGetRequestQueryKey,
-  getListRequestsQueryKey,
-  useCreateRequest,
-} from "@/api/generated/requests/requests";
 import { useListRooms } from "@/api/generated/rooms/rooms";
 import { useListFaultTypes } from "@/api/generated/fault-types/fault-types";
 import { PageHeader } from "@/components/shared/page-header";
@@ -24,8 +18,9 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { CURRENT_RESIDENT_ID } from "@/features/auth/current-user";
-import { roomLabel } from "./labels";
+import { getErrorMessage } from "@/api/client";
+import { roomLabel } from "../labels";
+import { useCreateRequest } from "../queries";
 
 const MAX_DESCRIPTION_LENGTH = 2000;
 
@@ -43,7 +38,6 @@ type NewRequestValues = z.output<typeof schema>;
 
 export function NewRequestPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const rooms = useListRooms();
   const faultTypes = useListFaultTypes();
 
@@ -53,22 +47,17 @@ export function NewRequestPage() {
   });
   const { errors } = form.formState;
 
-  const create = useCreateRequest({
-    mutation: {
-      onSuccess: (request) => {
-        toast.success(`Заявка №${request.id} создана`);
-        queryClient.setQueryData(getGetRequestQueryKey(request.id), request);
-        queryClient.invalidateQueries({
-          queryKey: getListRequestsQueryKey({ resident_id: CURRENT_RESIDENT_ID }),
-        });
-        navigate(`/requests/${request.id}`);
-      },
-      onError: (error) => toast.error("Не удалось создать заявку", { description: error.message }),
-    },
-  });
+  const create = useCreateRequest();
 
   const submit = (values: NewRequestValues) =>
-    create.mutate({ data: { ...values, resident_id: CURRENT_RESIDENT_ID } });
+    create.mutate(values, {
+      onSuccess: (request) => {
+        toast.success(`Заявка №${request.id} создана`);
+        navigate(`/requests/${request.id}`, { replace: true });
+      },
+      onError: (error) =>
+        toast.error("Не удалось создать заявку", { description: getErrorMessage(error) }),
+    });
 
   const lookupsFailed = Boolean(rooms.error || faultTypes.error);
 
