@@ -1,4 +1,4 @@
-.PHONY: up down run migrate revision seed test lint openapi-schema
+.PHONY: up down run migrate revision seed create-admin test lint openapi-schema
 
 up:
 	@docker compose build
@@ -18,6 +18,9 @@ revision:
 
 seed:
 	@docker compose run --rm backend db seed
+
+create-admin:
+	@docker compose run --rm backend create-admin --login "$(login)" --full-name "$(name)" $(if $(phone),--phone "$(phone)")
 
 test:
 	@uv run pytest backend/tests
