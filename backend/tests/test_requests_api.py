@@ -47,7 +47,7 @@ async def test_create_and_get_request(client, login, resident, room, fault_type)
     assert created.status_code == 201
     body = created.json()
     assert body["status"] == "new"
-    assert body["resident_id"] == resident.id
+    assert body["resident"]["id"] == resident.id
     assert body["room"]["number"] == "101"
     assert body["fault_type"]["name"] == "Сантехника"
     assert body["active_assignment"] is None
@@ -122,6 +122,14 @@ async def test_create_requires_login(client, room, fault_type):
 async def test_missing_request_returns_404(client, login, dispatcher):
     await login(dispatcher)
     assert (await client.get("/api/v1/requests/999")).status_code == 404
+
+
+async def test_ids_outside_database_range_are_rejected(client, login, resident, room, fault_type):
+    await login(resident)
+    for request_id in (0, 2**31):
+        assert (await client.get(f"/api/v1/requests/{request_id}")).status_code == 422
+    too_big = payload(room, fault_type, room_id=2**31)
+    assert (await client.post("/api/v1/requests", json=too_big)).status_code == 422
 
 
 async def test_resident_cannot_view_foreign_request(client, login, make_user, create_request):

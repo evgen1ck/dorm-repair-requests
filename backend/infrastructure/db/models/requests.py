@@ -8,6 +8,7 @@ from backend.infrastructure.db.models.assignments import Assignment
 from backend.infrastructure.db.models.base import Base, db_enum
 from backend.infrastructure.db.models.fault_types import FaultType
 from backend.infrastructure.db.models.rooms import Room
+from backend.infrastructure.db.models.users import User
 
 
 class RequestStatus(enum.StrEnum):
@@ -40,6 +41,7 @@ class RepairRequest(Base):
     )
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    resident: Mapped[User] = relationship(lazy="joined")
     room: Mapped[Room] = relationship(lazy="joined")
     fault_type: Mapped[FaultType] = relationship(lazy="joined")
     active_assignment: Mapped[Assignment | None] = relationship(

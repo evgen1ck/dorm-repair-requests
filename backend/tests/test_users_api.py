@@ -111,6 +111,11 @@ async def test_unknown_user_returns_404(client, admin, login):
     assert (await client.patch("/api/v1/users/999", json={"phone": "1"})).status_code == 404
 
 
+async def test_user_id_outside_database_range_is_rejected(client, admin, login):
+    await login(admin)
+    assert (await client.get(f"/api/v1/users/{2**31}")).status_code == 422
+
+
 async def test_dispatcher_cannot_manage_users(client, dispatcher, master, login):
     await login(dispatcher)
     assert (await client.post("/api/v1/users", json=new_user())).status_code == 403

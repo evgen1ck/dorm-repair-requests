@@ -3,8 +3,9 @@ from typing import Annotated
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, StringConstraints
 
-from backend.domains.auth.schemas import UserResponse
+from backend.domains.auth.schemas import PersonResponse
 from backend.domains.fault_types.schemas import FaultTypeResponse
+from backend.domains.ids import DbId
 from backend.domains.rooms.schemas import RoomResponse
 from backend.infrastructure.db.models import RequestStatus
 
@@ -14,13 +15,13 @@ FaultDescription = Annotated[
 
 
 class RepairRequestCreate(BaseModel):
-    room_id: int
-    fault_type_id: int
+    room_id: DbId
+    fault_type_id: DbId
     fault_description: FaultDescription
 
 
 class AssignmentCreate(BaseModel):
-    master_id: int
+    master_id: DbId
     due_at: AwareDatetime
 
 
@@ -32,8 +33,8 @@ class AssignmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    dispatcher: UserResponse
-    master: UserResponse
+    dispatcher: PersonResponse
+    master: PersonResponse
     due_at: datetime
     created_at: datetime
 
@@ -42,7 +43,7 @@ class RepairRequestResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    resident_id: int
+    resident: PersonResponse
     room: RoomResponse
     fault_type: FaultTypeResponse
     fault_description: str
@@ -57,7 +58,7 @@ class RequestStatusHistoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    changed_by: UserResponse
+    changed_by: PersonResponse
     old_status: RequestStatus | None
     new_status: RequestStatus
     changed_at: datetime

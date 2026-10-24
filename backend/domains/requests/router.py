@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi import status as http_status
 
 from backend.domains.auth.dependencies import CurrentUser, DispatcherOrAdmin, Master, Resident
+from backend.domains.ids import DbIdPath
 from backend.domains.requests.dependencies import get_repair_request_service
 from backend.domains.requests.schemas import (
     AssignmentCreate,
@@ -36,27 +37,27 @@ async def list_requests(
 
 @router.get("/{request_id}")
 async def get_request(
-    service: Service, user: CurrentUser, request_id: int
+    service: Service, user: CurrentUser, request_id: DbIdPath
 ) -> RepairRequestResponse:
     return await service.get(request_id, user)
 
 
 @router.get("/{request_id}/history")
 async def get_request_history(
-    service: Service, user: CurrentUser, request_id: int
+    service: Service, user: CurrentUser, request_id: DbIdPath
 ) -> list[RequestStatusHistoryResponse]:
     return await service.get_history(request_id, user)
 
 
 @router.post("/{request_id}/assignments", status_code=http_status.HTTP_201_CREATED)
 async def assign_request(
-    service: Service, dispatcher: DispatcherOrAdmin, request_id: int, body: AssignmentCreate
+    service: Service, dispatcher: DispatcherOrAdmin, request_id: DbIdPath, body: AssignmentCreate
 ) -> RepairRequestResponse:
     return await service.assign(request_id, dispatcher, body)
 
 
 @router.patch("/{request_id}/status")
 async def change_request_status(
-    service: Service, master: Master, request_id: int, body: RequestStatusUpdate
+    service: Service, master: Master, request_id: DbIdPath, body: RequestStatusUpdate
 ) -> RepairRequestResponse:
     return await service.change_status(request_id, master, body)

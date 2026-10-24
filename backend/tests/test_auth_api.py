@@ -12,6 +12,7 @@ async def test_login_sets_cookie_and_returns_user(client, resident, password):
         "full_name": "Ivan",
         "phone": None,
         "role": "resident",
+        "is_active": True,
     }
     cookie = response.headers["set-cookie"]
     assert cookie.startswith("access_token=")

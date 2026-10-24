@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from backend.domains.auth.dependencies import Admin, DispatcherOrAdmin
 from backend.domains.auth.schemas import UserResponse
+from backend.domains.ids import DbIdPath
 from backend.domains.users.dependencies import get_user_service
 from backend.domains.users.schemas import UserCreate, UserUpdate
 from backend.domains.users.service import UserService
@@ -30,12 +31,12 @@ async def create_user(service: Service, _: Admin, body: UserCreate) -> UserRespo
 
 
 @router.get("/{user_id}")
-async def get_user(service: Service, _: Admin, user_id: int) -> UserResponse:
+async def get_user(service: Service, _: Admin, user_id: DbIdPath) -> UserResponse:
     return await service.get(user_id)
 
 
 @router.patch("/{user_id}")
 async def update_user(
-    service: Service, admin: Admin, user_id: int, body: UserUpdate
+    service: Service, admin: Admin, user_id: DbIdPath, body: UserUpdate
 ) -> UserResponse:
     return await service.update(user_id, admin, body)

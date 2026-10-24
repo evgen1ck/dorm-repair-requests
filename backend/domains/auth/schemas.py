@@ -21,11 +21,15 @@ class LoginRequest(BaseModel):
     password: Password
 
 
-class UserResponse(BaseModel):
+class PersonResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    login: str
     full_name: str
     phone: str | None
     role: UserRole
+
+
+class UserResponse(PersonResponse):
+    login: str
+    is_active: bool
